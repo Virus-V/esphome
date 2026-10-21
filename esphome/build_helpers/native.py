@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Native build backend per (target platform, toolchain)
 NATIVE_TOOLCHAIN_MODULES = {
+    ("bouffalo", Toolchain.BOUFFALO): "esphome.bouffalo.toolchain",
     ("esp32", Toolchain.ESP_IDF): "esphome.espidf.toolchain",
     ("esp8266", Toolchain.ARDUINO): "esphome.arduino8266.toolchain",
     ("host", Toolchain.HOST): "esphome.host.toolchain",

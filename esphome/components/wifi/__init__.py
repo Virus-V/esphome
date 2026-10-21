@@ -114,6 +114,7 @@ def variant_has_wifi(variant: str) -> bool:
 
 _WIFI_FIRST_PLATFORMS: frozenset[str] = frozenset(
     {
+        Platform.BOUFFALO,
         Platform.ESP8266,
         Platform.BK72XX,
         Platform.RTL87XX,
@@ -489,7 +490,13 @@ def _consume_wifi_sockets(config: ConfigType) -> ConfigType:
     DHCP/DNS). On ESP32, CONFIG_LWIP_MAX_SOCKETS only controls the POSIX socket
     layer — DHCP/DNS use raw udp_new() which bypasses it entirely.
     """
-    if not (CORE.is_bk72xx or CORE.is_rtl87xx or CORE.is_ln882x or CORE.is_rp2):
+    if not (
+        CORE.is_bk72xx
+        or CORE.is_rtl87xx
+        or CORE.is_ln882x
+        or CORE.is_bouffalo
+        or CORE.is_rp2
+    ):
         return config
     from esphome.components import socket
 
@@ -507,6 +514,19 @@ FINAL_VALIDATE_SCHEMA = cv.All(
 
 
 def _validate(config: ConfigType) -> ConfigType:
+    if CORE.is_bouffalo:
+        if CONF_AP in config:
+            raise cv.Invalid("Bouffalo currently supports Wi-Fi station mode only")
+        if CONF_EAP in config or any(
+            CONF_EAP in network for network in config.get(CONF_NETWORKS, [])
+        ):
+            raise cv.Invalid("Bouffalo WPA2 Enterprise is not implemented")
+        if config[CONF_POWER_SAVE_MODE] != "NONE":
+            raise cv.Invalid("Bouffalo Wi-Fi power saving is not implemented")
+        if CONF_OUTPUT_POWER in config:
+            raise cv.Invalid("Bouffalo Wi-Fi output power control is not implemented")
+        if config[CONF_PASSIVE_SCAN]:
+            raise cv.Invalid("Bouffalo passive scanning is not implemented")
     if CONF_SSID in config:
         # Automatically move single network to 'networks' section
         config = config.copy()
@@ -646,6 +666,7 @@ CONFIG_SCHEMA = cv.All(
             ): cv.positive_time_period_milliseconds,
             cv.SplitDefault(
                 CONF_POWER_SAVE_MODE,
+                bouffalo="none",
                 esp8266="none",
                 esp32="light",
                 rp2="light",
@@ -1232,6 +1253,7 @@ FILTER_SOURCE_FILES = filter_source_files_from_platform(
             PlatformFramework.ESP32_ARDUINO,
         },
         "wifi_component_esp8266.cpp": {PlatformFramework.ESP8266_ARDUINO},
+        "wifi_component_bouffalo.cpp": {PlatformFramework.BOUFFALO_ARDUINO},
         "wifi_component_libretiny.cpp": {
             PlatformFramework.BK72XX_ARDUINO,
             PlatformFramework.RTL87XX_ARDUINO,

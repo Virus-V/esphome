@@ -69,13 +69,20 @@ def _consume_mdns_sockets(config: ConfigType) -> ConfigType:
 
 
 def _require_network_interface(config: ConfigType) -> None:
-    """Require a network interface for mDNS on Arduino/LEAmDNS platforms.
+    """Require a network interface for platforms with a polling mDNS backend.
 
     On ESP8266 and RP2040 the C++ implementation needs at least one IP state
     listener (WiFi on ESP8266; WiFi or Ethernet on RP2040) to arm its polling
     window. Reject at config time rather than silently producing a component
     that never initializes.
     """
+    if CORE.is_bouffalo:
+        if not config.get(CONF_DISABLED):
+            raise cv.Invalid(
+                "mDNS is not supported on Bouffalo yet because its lwIP netif "
+                "does not support IGMP multicast membership"
+            )
+        return
     if config.get(CONF_DISABLED) or not (CORE.is_esp8266 or CORE.is_rp2):
         return
     full_config = fv.full_config.get()
@@ -93,7 +100,7 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(MDNSComponent),
-            cv.Optional(CONF_DISABLED, default=False): cv.boolean,
+            cv.Optional(CONF_DISABLED, default=lambda: CORE.is_bouffalo): cv.boolean,
             cv.Optional(CONF_SERVICES, default=[]): cv.ensure_list(SERVICE_SCHEMA),
         }
     ),

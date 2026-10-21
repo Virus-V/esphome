@@ -139,6 +139,8 @@ UART_SELECTION_LIBRETINY = {
 
 UART_SELECTION_RP2040 = [USB_CDC, UART0, UART1]
 
+UART_SELECTION_BOUFFALO = [UART0, UART1]
+
 UART_SELECTION_NRF52 = [USB_CDC, UART0]
 
 HARDWARE_UART_TO_UART_SELECTION = {
@@ -178,6 +180,8 @@ def uart_selection(value: Any) -> str:
         return cv.one_of(*UART_SELECTION_ESP8266, upper=True)(value)
     if CORE.is_rp2:
         return cv.one_of(*UART_SELECTION_RP2040, upper=True)(value)
+    if CORE.is_bouffalo:
+        return cv.one_of(*UART_SELECTION_BOUFFALO, upper=True)(value)
     if CORE.is_libretiny:
         family = get_libretiny_family()
         if family in UART_SELECTION_LIBRETINY:
@@ -267,6 +271,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_DEASSERT_RTS_DTR, default=False): cv.boolean,
             cv.SplitDefault(
                 CONF_TASK_LOG_BUFFER_SIZE,
+                bouffalo=768,
                 esp32=768,  # Default: 768 bytes (~5-6 messages with 70-byte text plus thread names)
                 bk72xx=768,
                 ln882x=768,
@@ -275,6 +280,7 @@ CONFIG_SCHEMA = cv.All(
             ): cv.All(
                 cv.only_on(
                     [
+                        "bouffalo",
                         PLATFORM_ESP32,
                         PLATFORM_BK72XX,
                         PLATFORM_LN882X,
@@ -294,6 +300,7 @@ CONFIG_SCHEMA = cv.All(
             ),
             cv.SplitDefault(
                 CONF_HARDWARE_UART,
+                bouffalo=UART0,
                 esp8266=UART0,
                 esp32=UART0,
                 esp32_c2=UART0,
@@ -316,6 +323,7 @@ CONFIG_SCHEMA = cv.All(
             ): cv.All(
                 cv.only_on(
                     [
+                        "bouffalo",
                         PLATFORM_ESP8266,
                         PLATFORM_ESP32,
                         PLATFORM_RP2,
@@ -383,7 +391,7 @@ async def to_code(config: ConfigType) -> None:
     # Determine task log buffer size. The buffer is a direct member of Logger
     # (no separate heap allocation).
     task_log_buffer_size = 0
-    if CORE.is_esp32 or CORE.is_libretiny or CORE.is_nrf52:
+    if CORE.is_esp32 or CORE.is_libretiny or CORE.is_nrf52 or CORE.is_bouffalo:
         task_log_buffer_size = config[CONF_TASK_LOG_BUFFER_SIZE]
     elif CORE.is_host:
         task_log_buffer_size = 64  # Fixed 64 slots for host
@@ -654,6 +662,7 @@ FILTER_SOURCE_FILES = filter_source_files_from_platform(
             PlatformFramework.ESP32_IDF,
         },
         "logger_esp8266.cpp": {PlatformFramework.ESP8266_ARDUINO},
+        "logger_bouffalo.cpp": {PlatformFramework.BOUFFALO_ARDUINO},
         "logger_host.cpp": {PlatformFramework.HOST_NATIVE},
         "logger_rp2.cpp": {PlatformFramework.RP2_ARDUINO},
         "logger_libretiny.cpp": {
@@ -668,6 +677,7 @@ FILTER_SOURCE_FILES = filter_source_files_from_platform(
         },
         "task_log_buffer_host.cpp": {PlatformFramework.HOST_NATIVE},
         "task_log_buffer_libretiny.cpp": {
+            PlatformFramework.BOUFFALO_ARDUINO,
             PlatformFramework.BK72XX_ARDUINO,
             PlatformFramework.RTL87XX_ARDUINO,
             PlatformFramework.LN882X_ARDUINO,

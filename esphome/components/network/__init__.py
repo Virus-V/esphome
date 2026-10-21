@@ -355,6 +355,7 @@ CONFIG_SCHEMA = cv.All(
             cv.SplitDefault(
                 CONF_ENABLE_IPV6,
                 bk72xx=False,
+                bouffalo=False,
                 esp32=False,
                 esp8266=False,
                 host=False,

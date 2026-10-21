@@ -106,6 +106,8 @@ bool socket_ready_fd(int fd, bool loop_monitored);
 inline bool Socket::ready() const {
 #ifdef USE_LWIP_FAST_SELECT
   return socket_ready(this->cached_sock_);
+#elif defined(USE_BOUFFALO)
+  return true;  // Nonblocking sockets are polled at the normal loop cadence.
 #else
   return socket_ready_fd(this->fd_, this->loop_monitored_);
 #endif

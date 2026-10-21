@@ -10,7 +10,7 @@ namespace esphome::logger {
 
 ESPHOME_LOG_TAG(TAG, "logger");
 
-#if defined(USE_ESP32) || defined(USE_HOST) || defined(USE_LIBRETINY) || defined(USE_ZEPHYR)
+#if defined(USE_ESP32) || defined(USE_HOST) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO) || defined(USE_ZEPHYR)
 // Implementation for multi-threaded platforms (ESP32 with FreeRTOS, Host with pthreads, LibreTiny with FreeRTOS,
 // Zephyr) Main thread/task always uses direct buffer access for console output and callbacks
 //
@@ -27,7 +27,7 @@ void HOT Logger::log_vprintf_(uint8_t level, const char *tag, int line, const ch
   if (level > this->level_for(tag))
     return;
 
-#if defined(USE_ESP32) || defined(USE_LIBRETINY)
+#if defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
   // Get task handle once - used for both main task check and passing to non-main thread handler
   TaskHandle_t current_task = xTaskGetCurrentTaskHandle();
   const bool is_main_task = (current_task == this->main_task_);
@@ -55,7 +55,7 @@ void HOT Logger::log_vprintf_(uint8_t level, const char *tag, int line, const ch
   // ESP32/LibreTiny: use TaskHandle_t overload to avoid redundant xTaskGetCurrentTaskHandle()
   // (we already have the handle from the main task check above).
   // Host: pass a stack buffer for pthread_getname_np to write into.
-#if defined(USE_ESP32) || defined(USE_LIBRETINY)
+#if defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
   const char *thread_name = get_thread_name_(current_task);
 #elif defined(USE_ZEPHYR)
   char thread_name_buf[MAX_POINTER_REPRESENTATION];
@@ -157,7 +157,7 @@ inline uint8_t Logger::level_for(const char *tag) {
 }
 
 Logger::Logger(uint32_t baud_rate) : baud_rate_(baud_rate) {
-#if defined(USE_ESP32) || defined(USE_LIBRETINY)
+#if defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
   this->main_task_ = xTaskGetCurrentTaskHandle();
 #elif defined(USE_ZEPHYR)
   this->main_task_ = k_current_get();

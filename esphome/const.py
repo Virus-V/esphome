@@ -18,6 +18,7 @@ ARGUMENT_HELP_DEVICE = "Manually specify the serial port/address to use, for exa
 class Toolchain(StrEnum):
     """Toolchain identifiers for ESPHome."""
 
+    BOUFFALO = "bouffalo"
     PLATFORMIO = "platformio"
     ESP_IDF = "esp-idf"
     SDK_NRF = "sdk-nrf"
@@ -39,13 +40,16 @@ class ErrorFormat(StrEnum):
 # Toolchains that drive their build natively and never read platformio.ini.
 # SDK_NRF is absent on purpose: the zephyr backend keeps consuming
 # platformio_options.
-NATIVE_TOOLCHAINS = frozenset({Toolchain.ESP_IDF, Toolchain.ARDUINO, Toolchain.HOST})
+NATIVE_TOOLCHAINS = frozenset(
+    {Toolchain.BOUFFALO, Toolchain.ESP_IDF, Toolchain.ARDUINO, Toolchain.HOST}
+)
 
 
 class Platform(StrEnum):
     """Platform identifiers for ESPHome."""
 
     BK72XX = "bk72xx"
+    BOUFFALO = "bouffalo"
     ESP32 = "esp32"
     ESP8266 = "esp8266"
     HOST = "host"
@@ -109,6 +113,7 @@ class PlatformFramework(Enum):
     ESP32_IDF = (Platform.ESP32, Framework.ESP_IDF)
 
     # Arduino framework platforms
+    BOUFFALO_ARDUINO = (Platform.BOUFFALO, Framework.ARDUINO)
     ESP8266_ARDUINO = (Platform.ESP8266, Framework.ARDUINO)
     RP2_ARDUINO = (Platform.RP2, Framework.ARDUINO)
     # Deprecated: use PlatformFramework.RP2_ARDUINO instead. Kept as an
@@ -127,6 +132,7 @@ class PlatformFramework(Enum):
 
 # Maintain backward compatibility by reassigning after enum definition
 PLATFORM_BK72XX = Platform.BK72XX
+PLATFORM_BOUFFALO = Platform.BOUFFALO
 PLATFORM_ESP32 = Platform.ESP32
 PLATFORM_ESP8266 = Platform.ESP8266
 PLATFORM_HOST = Platform.HOST

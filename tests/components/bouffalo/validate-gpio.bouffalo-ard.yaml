@@ -1,0 +1,11 @@
+binary_sensor:
+  - platform: gpio
+    name: Input
+    pin: GPIO5
+
+switch:
+  - platform: gpio
+    name: Output
+    pin:
+      number: GPIO6
+      mode: OUTPUT_OPEN_DRAIN

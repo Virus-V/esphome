@@ -63,6 +63,10 @@ ESPHomeOTAComponent = esphome.class_("ESPHomeOTAComponent", OTAComponent)
 
 
 def ota_esphome_final_validate(config: ConfigType) -> None:
+    if CORE.is_bouffalo:
+        raise cv.Invalid(
+            "ESPHome network OTA is not supported on Bouffalo yet; use UART flashing"
+        )
     full_conf = fv.full_config.get()
     full_ota_conf = full_conf[OTA_DOMAIN]
     new_ota_conf = []

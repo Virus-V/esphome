@@ -11,6 +11,8 @@
 #include "esphome/components/esp8266/preferences.h"
 #elif defined(USE_RP2)
 #include "esphome/components/rp2/preferences.h"
+#elif defined(USE_BOUFFALO)
+#include "esphome/components/bouffalo/preferences.h"
 #elif defined(USE_LIBRETINY)
 #include "esphome/components/libretiny/preferences.h"
 #elif defined(USE_HOST)

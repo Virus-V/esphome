@@ -1,4 +1,4 @@
-#ifdef USE_LIBRETINY
+#if defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
 
 #include "task_log_buffer_libretiny.h"
 #include "esphome/core/log.h"

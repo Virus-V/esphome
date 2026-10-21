@@ -63,8 +63,8 @@ STACKTRACE_GATES: Final[dict[str, str]] = {
 }
 
 PLATFORM_HOOKS: Final[dict[str, frozenset[str]]] = {
-    "show_logs": frozenset({PLATFORM_NRF52}),
-    "upload_program": frozenset({PLATFORM_NRF52}),
+    "show_logs": frozenset({PLATFORM_NRF52, Platform.BOUFFALO}),
+    "upload_program": frozenset({PLATFORM_NRF52, Platform.BOUFFALO}),
     "process_stacktrace": frozenset(STACKTRACE_GATES),
 }
 

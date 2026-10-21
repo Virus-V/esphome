@@ -43,6 +43,7 @@ CONFIG_SCHEMA = (
             cv.SplitDefault(
                 CONF_USE_INTERRUPT,
                 bk72xx=False,
+                bouffalo=False,
                 esp32=True,
                 esp8266=True,
                 host=True,

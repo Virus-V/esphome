@@ -25,7 +25,7 @@
 #include <utility>
 #include <vector>
 
-#ifdef USE_LIBRETINY
+#if defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
 #include <WiFi.h>
 #endif
 
