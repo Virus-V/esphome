@@ -462,6 +462,7 @@ CONFIG_SCHEMA = cv.All(
             # Platform defaults based on available RAM and network stack implementation:
             cv.SplitDefault(
                 CONF_LISTEN_BACKLOG,
+                bouffalo=2,
                 esp8266=1,  # Limited RAM (~40KB free), LWIP raw sockets
                 esp32=4,  # More RAM (520KB), BSD sockets
                 rp2=1,  # Limited RAM (264KB), LWIP raw sockets like ESP8266
@@ -473,6 +474,7 @@ CONFIG_SCHEMA = cv.All(
             ): cv.int_range(min=1, max=10),
             cv.SplitDefault(
                 CONF_MAX_CONNECTIONS,
+                bouffalo=3,
                 esp8266=4,  # ~40KB free RAM, each connection uses ~500-1000 bytes
                 esp32=5,  # 520KB RAM available
                 rp2=4,  # 264KB RAM but LWIP constraints
@@ -487,6 +489,7 @@ CONFIG_SCHEMA = cv.All(
             # Platform defaults based on available RAM and typical message rates:
             cv.SplitDefault(
                 CONF_MAX_SEND_QUEUE,
+                bouffalo=8,
                 esp8266=4,  # Limited RAM, need to fail fast
                 esp32=8,  # More RAM, can buffer more
                 rp2=8,  # Moderate RAM

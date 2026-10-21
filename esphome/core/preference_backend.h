@@ -15,6 +15,8 @@
 #include "esphome/components/esp8266/preference_backend.h"
 #elif defined(USE_RP2)
 #include "esphome/components/rp2/preference_backend.h"
+#elif defined(USE_BOUFFALO)
+#include "esphome/components/bouffalo/preference_backend.h"
 #elif defined(USE_LIBRETINY)
 #include "esphome/components/libretiny/preference_backend.h"
 #elif defined(USE_HOST)
@@ -42,7 +44,7 @@ concept PreferenceBackendContract = requires(T backend, const uint8_t *src, uint
 };
 
 #if !defined(USE_ESP32) && !defined(USE_ESP8266) && !defined(USE_RP2) && !defined(USE_LIBRETINY) && \
-    !defined(USE_HOST) && !(defined(USE_ZEPHYR) && defined(CONFIG_SETTINGS))
+    !defined(USE_BOUFFALO) && !defined(USE_HOST) && !(defined(USE_ZEPHYR) && defined(CONFIG_SETTINGS))
 // Stub for static analysis when no platform is defined.
 struct PreferenceBackend {
   bool save(const uint8_t *, size_t) { return false; }

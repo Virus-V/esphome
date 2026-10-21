@@ -13,6 +13,11 @@ using InternalGPIOPin = esp32::ESP32InternalGPIOPin;
 namespace esphome {
 using InternalGPIOPin = esp8266::ESP8266GPIOPin;
 }
+#elif defined(USE_BOUFFALO)
+#include "esphome/components/bouffalo/gpio.h"
+namespace esphome {
+using InternalGPIOPin = bouffalo::BouffaloGPIOPin;
+}
 #elif defined(USE_LIBRETINY)
 #include "esphome/components/libretiny/gpio_arduino.h"
 namespace esphome {

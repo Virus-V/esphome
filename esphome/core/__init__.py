@@ -23,6 +23,7 @@ from esphome.const import (
     KEY_TARGET_PLATFORM,
     NATIVE_TOOLCHAINS,
     PLATFORM_BK72XX,
+    PLATFORM_BOUFFALO,
     PLATFORM_ESP32,
     PLATFORM_ESP8266,
     PLATFORM_HOST,
@@ -938,6 +939,10 @@ class EsphomeCore:
     @property
     def is_esp32(self):
         return self.target_platform == PLATFORM_ESP32
+
+    @property
+    def is_bouffalo(self):
+        return self.target_platform == PLATFORM_BOUFFALO
 
     @property
     def is_rp2(self):

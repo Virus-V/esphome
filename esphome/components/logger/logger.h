@@ -14,6 +14,11 @@
 #include "esphome/core/log.h"
 #include "esphome/core/progmem.h"
 
+#ifdef USE_BOUFFALO
+#include <FreeRTOS.h>
+#include <task.h>
+#endif
+
 #include "log_buffer.h"
 #include "task_log_buffer_host.h"
 #include "task_log_buffer_esp32.h"
@@ -21,6 +26,9 @@
 #include "task_log_buffer_zephyr.h"
 
 #ifdef USE_ARDUINO
+#ifdef USE_BOUFFALO
+#include <Arduino.h>
+#endif
 #if defined(USE_ESP8266)
 #include <HardwareSerial.h>
 #endif  // USE_ESP8266
@@ -101,7 +109,8 @@ struct CStrCompare {
 // macOS allows up to 64 bytes, Linux up to 16
 static constexpr size_t THREAD_NAME_BUF_SIZE = 64;
 
-#if defined(USE_ESP32) || defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_LIBRETINY) || defined(USE_ZEPHYR)
+#if defined(USE_ESP32) || defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_LIBRETINY) || \
+    defined(USE_BOUFFALO) || defined(USE_ZEPHYR)
 /** Enum for logging UART selection
  *
  * Advanced configuration (pin selection, etc) is not supported.
@@ -127,7 +136,7 @@ enum UARTSelection : uint8_t {
   UART_SELECTION_UART0_SWAP,
 #endif  // USE_ESP8266
 };
-#endif  // USE_ESP32 || USE_ESP8266 || USE_RP2 || USE_LIBRETINY || USE_ZEPHYR
+#endif  // USE_ESP32 || USE_ESP8266 || USE_RP2 || USE_LIBRETINY || USE_BOUFFALO || USE_ZEPHYR
 
 /**
  * @brief Logger component for all ESPHome logging.
@@ -165,7 +174,8 @@ class Logger final : public Component {
 #ifdef USE_HOST
   void create_pthread_key() { pthread_key_create(&log_recursion_key_, nullptr); }
 #endif
-#if defined(USE_ESP32) || defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_LIBRETINY) || defined(USE_ZEPHYR)
+#if defined(USE_ESP32) || defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_LIBRETINY) || \
+    defined(USE_BOUFFALO) || defined(USE_ZEPHYR)
   void set_uart_selection(UARTSelection uart_selection) { uart_ = uart_selection; }
   /// Get the UART used by the logger.
   UARTSelection get_uart() const { return this->uart_; }
@@ -227,7 +237,7 @@ class Logger final : public Component {
     bool &flag_;
   };
 
-#if defined(USE_ESP32) || defined(USE_HOST) || defined(USE_LIBRETINY) || defined(USE_ZEPHYR)
+#if defined(USE_ESP32) || defined(USE_HOST) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO) || defined(USE_ZEPHYR)
   // Handles non-main thread logging only (~0.1% of calls)
   // thread_name is resolved by the caller from the task handle, avoiding redundant lookups
   void log_vprintf_non_main_thread_(uint8_t level, const char *tag, int line, const char *format, va_list args,
@@ -327,7 +337,7 @@ class Logger final : public Component {
   void dump_crash_();
   const device *uart_dev_{nullptr};
 #endif
-#if defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_ZEPHYR)
+#if defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO) || defined(USE_ZEPHYR)
   void *main_task_{nullptr};  // Main thread/task for fast path comparison
 #endif
 #ifdef USE_HOST
@@ -358,16 +368,16 @@ class Logger final : public Component {
 #endif
   // Group smaller types together at the end
   uint8_t current_level_{ESPHOME_LOG_LEVEL_VERY_VERBOSE};
-#if defined(USE_ESP32) || defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_ZEPHYR)
+#if defined(USE_ESP32) || defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_ZEPHYR) || defined(USE_BOUFFALO)
   UARTSelection uart_{UART_SELECTION_UART0};  // Must match cpp_default_uart in __init__.py
 #endif
 #ifdef USE_LIBRETINY
   UARTSelection uart_{UART_SELECTION_DEFAULT};  // Must match cpp_default_uart in __init__.py
 #endif
-#if defined(USE_ESP32) || defined(USE_HOST) || defined(USE_LIBRETINY) || defined(USE_ZEPHYR)
+#if defined(USE_ESP32) || defined(USE_HOST) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO) || defined(USE_ZEPHYR)
   bool main_task_recursion_guard_{false};
-#ifdef USE_LIBRETINY
-  bool non_main_task_recursion_guard_{false};  // Shared guard for all non-main tasks on LibreTiny
+#if defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
+  bool non_main_task_recursion_guard_{false};  // Shared by all non-main tasks on this platform
 #endif
 #else
   bool global_recursion_guard_{false};  // Simple global recursion guard for single-task platforms
@@ -381,7 +391,7 @@ class Logger final : public Component {
 
   // --- get_thread_name_ overloads (per-platform) ---
 
-#if defined(USE_ESP32) || defined(USE_LIBRETINY)
+#if defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
   // Primary overload - takes a task handle directly to avoid redundant xTaskGetCurrentTaskHandle() calls
   // when the caller already has the handle (e.g. from the main task check in log_vprintf_)
   const char *get_thread_name_(TaskHandle_t task) {
@@ -390,7 +400,7 @@ class Logger final : public Component {
     }
 #if defined(USE_ESP32)
     return pcTaskGetName(task);
-#elif defined(USE_LIBRETINY)
+#elif defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
     return pcTaskGetTaskName(task);
 #endif
   }
@@ -455,8 +465,8 @@ class Logger final : public Component {
   // Create RAII guard for non-main task recursion
   inline NonMainTaskRecursionGuard make_non_main_task_guard_() { return NonMainTaskRecursionGuard(log_recursion_key_); }
 
-#elif defined(USE_LIBRETINY) || defined(USE_ZEPHYR)
-  // LibreTiny doesn't have FreeRTOS TLS, so use a simple approach:
+#elif defined(USE_LIBRETINY) || defined(USE_BOUFFALO) || defined(USE_ZEPHYR)
+  // LibreTiny and Bouffalo use a shared non-main-task recursion guard.
   // - Main task uses dedicated boolean (same as ESP32)
   // - Non-main tasks share a single recursion guard
   // This is safe because:
@@ -531,6 +541,8 @@ void log_crash_to_client();
 #include "logger_esp8266.h"
 #elif defined(USE_RP2)
 #include "logger_rp2.h"
+#elif defined(USE_BOUFFALO)
+#include "logger_bouffalo.h"
 #elif defined(USE_LIBRETINY)
 #include "logger_libretiny.h"
 #endif

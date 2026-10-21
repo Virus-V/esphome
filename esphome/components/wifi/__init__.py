@@ -116,6 +116,7 @@ def variant_has_wifi(variant: str) -> bool:
 
 _WIFI_FIRST_PLATFORMS: frozenset[str] = frozenset(
     {
+        Platform.BOUFFALO,
         Platform.ESP8266,
         Platform.BK72XX,
         Platform.RTL87XX,
@@ -519,7 +520,13 @@ def _consume_wifi_sockets(config: ConfigType) -> ConfigType:
     DHCP/DNS). On ESP32, CONFIG_LWIP_MAX_SOCKETS only controls the POSIX socket
     layer — DHCP/DNS use raw udp_new() which bypasses it entirely.
     """
-    if not (CORE.is_bk72xx or CORE.is_rtl87xx or CORE.is_ln882x or CORE.is_rp2):
+    if not (
+        CORE.is_bk72xx
+        or CORE.is_rtl87xx
+        or CORE.is_ln882x
+        or CORE.is_bouffalo
+        or CORE.is_rp2
+    ):
         return config
     from esphome.components import socket
 
@@ -675,6 +682,7 @@ CONFIG_SCHEMA = cv.All(
             ): cv.positive_time_period_milliseconds,
             cv.SplitDefault(
                 CONF_POWER_SAVE_MODE,
+                bouffalo="none",
                 esp8266="none",
                 esp32="light",
                 rp2="light",
@@ -1262,6 +1270,7 @@ FILTER_SOURCE_FILES = filter_source_files_from_platform(
             PlatformFramework.ESP32_ARDUINO,
         },
         "wifi_component_esp8266.cpp": {PlatformFramework.ESP8266_ARDUINO},
+        "wifi_component_bouffalo.cpp": {PlatformFramework.BOUFFALO_ARDUINO},
         "wifi_component_libretiny.cpp": {
             PlatformFramework.BK72XX_ARDUINO,
             PlatformFramework.RTL87XX_ARDUINO,

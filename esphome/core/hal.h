@@ -25,6 +25,8 @@
 #include "esphome/components/esp32/hal.h"
 #elif defined(USE_ESP8266)
 #include "esphome/components/esp8266/hal.h"
+#elif defined(USE_BOUFFALO)
+#include "esphome/components/bouffalo/hal.h"
 #elif defined(USE_LIBRETINY)
 #include "esphome/components/libretiny/hal.h"
 #elif defined(USE_RP2)

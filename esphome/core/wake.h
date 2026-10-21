@@ -10,6 +10,9 @@
 
 #include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
+#ifdef USE_BOUFFALO
+#include <bflb_irq.h>
+#endif
 
 #ifdef ESPHOME_THREAD_MULTI_ATOMICS
 #include <atomic>
@@ -50,8 +53,15 @@ extern volatile uint8_t g_wake_requested;
 
 __attribute__((always_inline)) inline void wake_request_set() { g_wake_requested = 1; }
 __attribute__((always_inline)) inline bool wake_request_take() {
+#ifdef USE_BOUFFALO
+  // Preserve an ISR wake arriving between the load and clear.
+  const uintptr_t irq_state = bflb_irq_save();
+#endif
   uint8_t v = g_wake_requested;
   g_wake_requested = 0;
+#ifdef USE_BOUFFALO
+  bflb_irq_restore(irq_state);
+#endif
   return v != 0;
 }
 #endif
@@ -61,7 +71,7 @@ __attribute__((always_inline)) inline bool wake_request_take() {
 // Per-platform implementations. Each header re-enters namespace esphome {} and
 // guards its body with the matching USE_* check, so only one contributes code
 // for the active target.
-#if defined(USE_ESP32) || defined(USE_LIBRETINY)
+#if defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
 #include "esphome/core/wake/wake_freertos.h"
 #elif defined(USE_ESP8266)
 #include "esphome/core/wake/wake_esp8266.h"

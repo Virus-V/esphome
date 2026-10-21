@@ -1000,6 +1000,7 @@ _filter_platform_sources = filter_source_files_from_platform(
             PlatformFramework.ESP32_IDF,
         },
         "main_task.c": {
+            PlatformFramework.BOUFFALO_ARDUINO,
             PlatformFramework.ESP32_ARDUINO,
             PlatformFramework.ESP32_IDF,
             PlatformFramework.BK72XX_ARDUINO,
@@ -1024,6 +1025,7 @@ _filter_platform_sources = filter_source_files_from_platform(
         # too. Header files next to each .cpp are always copied (the dispatcher
         # #include's them) but compile to empty TUs on the wrong platform anyway.
         "wake/wake_freertos.cpp": {
+            PlatformFramework.BOUFFALO_ARDUINO,
             PlatformFramework.ESP32_ARDUINO,
             PlatformFramework.ESP32_IDF,
             PlatformFramework.BK72XX_ARDUINO,

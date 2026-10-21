@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef USE_LIBRETINY
+#if defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
 
 #include "esphome/core/defines.h"
 #include "esphome/core/helpers.h"

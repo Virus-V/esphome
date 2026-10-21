@@ -44,7 +44,7 @@
 #if defined(USE_ESP32)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
-#elif defined(USE_LIBRETINY)
+#elif defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
 #include <FreeRTOS.h>
 #include <semphr.h>
 #endif
@@ -1161,7 +1161,7 @@ inline bool str_contains_ignore_case(const char *haystack, const char *needle) {
 // strcasestr is a GNU extension: newlib only declares it when _GNU_SOURCE is set.
 // ESP32/host builds get it from their framework or from g++ on Linux;
 // LibreTiny, RP2 and Zephyr do not, so they use the hand-rolled fallback.
-#if defined(USE_LIBRETINY) || defined(USE_RP2) || defined(USE_ZEPHYR)
+#if defined(USE_LIBRETINY) || defined(USE_RP2) || defined(USE_ZEPHYR) || defined(USE_BOUFFALO)
   return str_contains_ignore_case_fallback(haystack, needle);
 #else   // defined(USE_LIBRETINY) || defined(USE_RP2) || defined(USE_ZEPHYR)
   return strcasestr(haystack, needle) != nullptr;
@@ -2095,7 +2095,7 @@ class Mutex {
   void lock() {}
   bool try_lock() { return true; }
   void unlock() {}
-#elif defined(USE_ESP32) || defined(USE_LIBRETINY)
+#elif defined(USE_ESP32) || defined(USE_LIBRETINY) || defined(USE_BOUFFALO)
   // FreeRTOS platforms: inline to avoid out-of-line call overhead.
   Mutex() { handle_ = xSemaphoreCreateMutex(); }
   ~Mutex() = default;
@@ -2157,7 +2157,7 @@ class InterruptLock {
   ~InterruptLock();
 
  protected:
-#if defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_ZEPHYR)
+#if defined(USE_ESP8266) || defined(USE_RP2) || defined(USE_ZEPHYR) || defined(USE_BOUFFALO)
   uint32_t state_;
 #endif
 };
@@ -2382,6 +2382,8 @@ template<class T> class RAMAllocator {
     return ::rp2040.getFreeHeap();
 #elif defined(USE_LIBRETINY)
     return lt_heap_get_free();
+#elif defined(USE_BOUFFALO)
+    return xPortGetFreeHeapSize();
 #else
     return 100000;
 #endif

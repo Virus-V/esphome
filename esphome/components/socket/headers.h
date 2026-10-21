@@ -140,7 +140,11 @@ struct iovec {
 #undef LWIP_COMPAT_SOCKETS
 #define LWIP_COMPAT_SOCKETS 0
 
+#ifdef USE_BOUFFALO
+#include <lwip_compat_sockets.h>
+#else
 #include "lwip/sockets.h"
+#endif
 #include <sys/types.h>
 
 #ifdef USE_ARDUINO
